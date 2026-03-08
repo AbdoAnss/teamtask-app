@@ -1,0 +1,22 @@
+<section class="projects-layout">
+  <article class="panel create">
+    <h2>Create Project</h2>
+    <form [formGroup]="createForm" (ngSubmit)="createProject()">
+      <input type="text" placeholder="Project name" formControlName="name" />
+      <textarea rows="4" placeholder="Description" formControlName="description"></textarea>
+      <button type="submit">Create</button>
+    </form>
+  </article>
+
+  <article class="panel list">
+    <h2>Project List</h2>
+    <p *ngIf="loading()">Loading...</p>
+    <a class="project-item" *ngFor="let project of projects()" [routerLink]="['/projects', project.id]">
+      <div>
+        <strong>{{ project.name }}</strong>
+        <p>{{ project.description || 'No description' }}</p>
+      </div>
+      <span>{{ project.taskCount }} tasks</span>
+    </a>
+  </article>
+</section>

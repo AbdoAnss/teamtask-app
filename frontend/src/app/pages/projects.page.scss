@@ -1,0 +1,55 @@
+.projects-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 320px 1fr;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+input,
+textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.project-item {
+  display: flex;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.project-item p {
+  margin: 0.3rem 0 0;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .projects-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,43 @@
+<section *ngIf="project() as currentProject" class="layout">
+  <article class="panel">
+    <h1>{{ currentProject.name }}</h1>
+    <p>{{ currentProject.description || 'No description' }}</p>
+
+    <h3>Create Task</h3>
+    <form [formGroup]="createTaskForm" (ngSubmit)="createTask()">
+      <input type="text" formControlName="title" placeholder="Task title" />
+      <textarea rows="3" formControlName="description" placeholder="Task description"></textarea>
+      <select formControlName="priority">
+        <option value="LOW">LOW</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="HIGH">HIGH</option>
+        <option value="CRITICAL">CRITICAL</option>
+      </select>
+      <button type="submit">Add task</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="toolbar">
+      <h2>Tasks</h2>
+      <div>
+        <button type="button" (click)="setFilter('')">All</button>
+        <button type="button" (click)="setFilter('TODO')">TODO</button>
+        <button type="button" (click)="setFilter('IN_PROGRESS')">IN_PROGRESS</button>
+        <button type="button" (click)="setFilter('DONE')">DONE</button>
+      </div>
+    </div>
+
+    <div class="task" *ngFor="let task of tasks()">
+      <div>
+        <strong>{{ task.title }}</strong>
+        <p>{{ task.description || 'No description' }}</p>
+      </div>
+      <div class="meta">
+        <span>{{ task.status }}</span>
+        <span>{{ task.priority }}</span>
+        <button type="button" (click)="advanceStatus(task)" [disabled]="task.status === 'DONE'">Advance</button>
+      </div>
+    </div>
+  </article>
+</section>

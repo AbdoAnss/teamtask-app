@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #fef6da 10%, #f6fbff 50%, #f1f2ff 100%);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e8e8ef;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.brand a {
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #f97316);
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 500;
+}
+
+nav a.active {
+  color: #0f172a;
+  border-bottom: 2px solid #f97316;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.45rem 0.9rem;
+  background: #0f172a;
+  color: #fff;
+  cursor: pointer;
+}
+
+main {
+  padding: 1rem;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,70 @@
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1rem;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0.5rem 0.7rem;
+  background: #0f172a;
+  color: #fff;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar > div {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.task {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.6rem;
+}
+
+.task p {
+  margin: 0.3rem 0 0;
+  color: #64748b;
+}
+
+.meta {
+  display: grid;
+  gap: 0.3rem;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

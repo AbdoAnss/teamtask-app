@@ -1,0 +1,39 @@
+<section class="dashboard-grid">
+  <article class="panel list">
+    <h2>Projects</h2>
+    <button *ngFor="let project of projects()" type="button" (click)="selectProject(project.id)" [class.active]="project.id === selectedProjectId()">
+      <span>{{ project.name }}</span>
+      <small>{{ project.taskCount }} tasks</small>
+    </button>
+  </article>
+
+  <article class="panel details" *ngIf="dashboard() as d">
+    <h2>{{ d.projectName }}</h2>
+    <p class="meta">Completion: {{ d.completionPercentage }}%</p>
+
+    <div class="stats">
+      <div>
+        <strong>{{ d.tasksByStatus.TODO || 0 }}</strong>
+        <span>TODO</span>
+      </div>
+      <div>
+        <strong>{{ d.tasksByStatus.IN_PROGRESS || 0 }}</strong>
+        <span>IN PROGRESS</span>
+      </div>
+      <div>
+        <strong>{{ d.tasksByStatus.DONE || 0 }}</strong>
+        <span>DONE</span>
+      </div>
+    </div>
+
+    <h3>Tasks By Member</h3>
+    <ul>
+      <li *ngFor="let entry of d.tasksByAssigneeName | keyvalue">
+        <span>{{ entry.key }}</span>
+        <strong>{{ entry.value }}</strong>
+      </li>
+    </ul>
+
+    <a *ngIf="selectedProject()" [routerLink]="['/projects', selectedProject()!.id]">Open project board</a>
+  </article>
+</section>
