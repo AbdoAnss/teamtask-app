@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: teamflow-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-teamflow}
+      POSTGRES_USER: ${DB_USER:-teamflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-teamflow_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-teamflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: teamflow-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-teamflow}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-teamflow}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-teamflow_secret}
+      JWT_SECRET: ${JWT_SECRET:-changeme_in_production_use_256bit_key}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: teamflow-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  postgres_data:

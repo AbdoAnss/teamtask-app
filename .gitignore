@@ -1,0 +1,8 @@
+.env
+*.class
+target/
+*.jar
+*.war
+node_modules/
+dist/
+.angular/
