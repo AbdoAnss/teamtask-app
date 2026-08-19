@@ -1,77 +1,69 @@
 # TeamFlow
 
-Application full stack de gestion de taches d'equipe (outil interne fictif).
+Application de gestion de tâches d'équipe : projets, membres, tâches assignées et
+tableau de bord par projet. Projet personnel full stack, jouable en local ou via
+Docker Compose.
 
-## Structure
+## Stack
 
-- `backend/`: API Spring Boot 3 (Java 17, JWT, JPA, PostgreSQL, Swagger)
-- `frontend/`: Angular 17 (standalone, RxJS, guards, interceptor JWT)
-- `docs/`: OpenAPI et diagrammes
-- `docker-compose.yml`
+- **Backend** — Spring Boot 3.2 (Java 17) : API REST, Spring Security + JWT,
+  Spring Data JPA, Flyway, MapStruct, PostgreSQL, springdoc-openapi.
+- **Frontend** — Angular 17 standalone : guards, interceptor JWT ; tous les
+  appels HTTP passent par un client généré depuis la spécification OpenAPI.
+- **Infra** — Docker Compose (PostgreSQL, backend, nginx) et GitHub Actions
+  pour le CI Maven.
 
-## Prerequis
+## Démarrage local
 
-- Java 17+
-- Maven 3.9+
-- Node 20+
-- PostgreSQL 15+ (ou Docker)
+Backend avec PostgreSQL :
 
-## Configuration
-
-1. Copier `.env.example` en `.env` a la racine.
-2. Adapter les variables DB/JWT.
-
-## Lancement local
-
-### Backend (port 8080)
-
-```powershell
+```bash
+docker compose up -d postgres
 cd backend
-mvn spring-boot:run
+mvn spring-boot:run        # Swagger : http://localhost:8080/swagger-ui.html
 ```
 
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-- OpenAPI YAML: `http://localhost:8080/v3/api-docs.yaml`
+Frontend :
 
-### Frontend (port 4200)
-
-```powershell
+```bash
 cd frontend
 npm install
-npm start
+npm start                  # http://localhost:4200
 ```
 
-## Docker Compose
+Ou tout en Docker (les variables DB/JWT se règlent dans `.env`, voir
+`.env.example`) :
 
-```powershell
-docker compose --env-file .env up --build
+```bash
+docker compose up --build
 ```
 
-- Frontend: `http://localhost:4200`
-- Backend: `http://localhost:8080`
-- Postgres: `localhost:5432`
+## Client Angular généré depuis l'OpenAPI
 
-## OpenAPI Client Angular
+La spec est exportée depuis springdoc puis le client TypeScript est régénéré :
 
-1. Exporter la spec:
-
-```powershell
-Invoke-WebRequest http://localhost:8080/v3/api-docs.yaml -OutFile .\docs\openapi.yaml
+```bash
+curl http://localhost:8080/v3/api-docs.yaml -o docs/openapi.yaml
+cd frontend && npm run generate:client
 ```
 
-2. Generer le client:
+Les services de `src/app/core/` enveloppent les services générés : ils gardent
+des modèles de vue stricts et branchent la session JWT via l'interceptor.
 
-```powershell
-cd frontend
-npm run generate:client
+## Tests et couverture
+
+```bash
+cd backend && mvn verify
 ```
 
-## Tests backend
+Tests unitaires JUnit 5 / Mockito sur les services, la sécurité JWT et les
+mappers MapStruct, plus un test d'intégration MockMvc de bout en bout sur H2
+(inscription, login, projets, tâches, tableau de bord, contrôle d'accès).
+Le build échoue en dessous de 80 % de couverture ligne (JaCoCo), seuil appliqué
+par GitHub Actions à chaque push ou PR touchant le backend.
 
-```powershell
-cd backend
-mvn test
-```
+## Migrations
 
-Des tests unitaires JUnit5/Mockito sont fournis sur les services metier principaux.
+Le schéma est géré par Flyway (`backend/src/main/resources/db/migration`) et
+Hibernate tourne en `ddl-auto: validate` : une divergence entre entités et SQL
+fait échouer le démarrage plutôt que silencieusement régénérer le schéma.

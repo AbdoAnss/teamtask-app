@@ -1,0 +1,11 @@
+export * from './auth.service';
+import { AuthService } from './auth.service';
+export * from './dashboard.service';
+import { DashboardService } from './dashboard.service';
+export * from './projects.service';
+import { ProjectsService } from './projects.service';
+export * from './tasks.service';
+import { TasksService } from './tasks.service';
+export * from './users.service';
+import { UsersService } from './users.service';
+export const APIS = [AuthService, DashboardService, ProjectsService, TasksService, UsersService];

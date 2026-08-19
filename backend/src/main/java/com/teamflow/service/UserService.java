@@ -8,6 +8,7 @@ import com.teamflow.dto.user.UserDto;
 import com.teamflow.exception.AccessDeniedException;
 import com.teamflow.exception.ConflictException;
 import com.teamflow.exception.ResourceNotFoundException;
+import com.teamflow.mapper.UserMapper;
 import com.teamflow.repository.UserRepository;
 import com.teamflow.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -25,15 +26,16 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
     public PageResponse<UserDto> getAllUsers(Pageable pageable) {
-        return PageResponse.from(userRepository.findAll(pageable).map(this::toDto));
+        return PageResponse.from(userRepository.findAll(pageable).map(userMapper::toDto));
     }
 
     @Transactional(readOnly = true)
     public UserDto getUserById(UUID id) {
-        return toDto(findOrThrow(id));
+        return userMapper.toDto(findOrThrow(id));
     }
 
     @Transactional
@@ -54,7 +56,7 @@ public class UserService {
         if (StringUtils.hasText(request.getPassword())) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        return toDto(userRepository.save(user));
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Transactional
@@ -64,19 +66,6 @@ public class UserService {
         }
         findOrThrow(id);
         userRepository.deleteById(id);
-    }
-
-    public UserDto toDto(User user) {
-        return UserDto.builder()
-            .id(user.getId())
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .firstName(user.getFirstName())
-            .lastName(user.getLastName())
-            .role(user.getRole())
-            .enabled(user.isEnabled())
-            .createdAt(user.getCreatedAt())
-            .build();
     }
 
     private User findOrThrow(UUID id) {

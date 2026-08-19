@@ -1,34 +1,38 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { API_BASE_URL } from './api.config';
+import { map, Observable } from 'rxjs';
 import { PageResponse, ProjectDto } from './models';
+import { ProjectsService as ProjectsApi } from '../api-client/api/projects.service';
+import { UpdateProjectRequest } from '../api-client';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly projectsApi: ProjectsApi) {}
 
   getProjects(page = 0, size = 10, name = ''): Observable<PageResponse<ProjectDto>> {
-    let params = new HttpParams().set('page', page).set('size', size).set('sort', 'updatedAt,desc');
-    if (name.trim()) {
-      params = params.set('name', name.trim());
-    }
-    return this.http.get<PageResponse<ProjectDto>>(`${API_BASE_URL}/projects`, { params });
+    const trimmed = name.trim();
+    return this.projectsApi
+      .getProjects(trimmed || undefined, page, size, ['updatedAt,desc'])
+      .pipe(map((result) => result as unknown as PageResponse<ProjectDto>));
   }
 
   getProjectById(id: string): Observable<ProjectDto> {
-    return this.http.get<ProjectDto>(`${API_BASE_URL}/projects/${id}`);
+    return this.projectsApi.getProject(id).pipe(map((result) => result as unknown as ProjectDto));
   }
 
   createProject(payload: { name: string; description?: string }): Observable<ProjectDto> {
-    return this.http.post<ProjectDto>(`${API_BASE_URL}/projects`, payload);
+    return this.projectsApi.createProject(payload).pipe(map((result) => result as unknown as ProjectDto));
   }
 
-  updateProject(id: string, payload: Partial<{ name: string; description: string; status: string }>): Observable<ProjectDto> {
-    return this.http.put<ProjectDto>(`${API_BASE_URL}/projects/${id}`, payload);
+  updateProject(
+    id: string,
+    payload: Partial<{ name: string; description: string; status: string }>
+  ): Observable<ProjectDto> {
+    return this.projectsApi
+      .updateProject(id, payload as UpdateProjectRequest)
+      .pipe(map((result) => result as unknown as ProjectDto));
   }
 
   addMember(projectId: string, userId: string): Observable<ProjectDto> {
-    return this.http.post<ProjectDto>(`${API_BASE_URL}/projects/${projectId}/members/${userId}`, {});
+    return this.projectsApi.addMember(projectId, userId).pipe(map((result) => result as unknown as ProjectDto));
   }
 }

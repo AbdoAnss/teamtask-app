@@ -10,6 +10,7 @@ import com.teamflow.dto.task.TaskDto;
 import com.teamflow.dto.task.UpdateTaskRequest;
 import com.teamflow.exception.AccessDeniedException;
 import com.teamflow.exception.ResourceNotFoundException;
+import com.teamflow.mapper.TaskMapper;
 import com.teamflow.repository.ProjectRepository;
 import com.teamflow.repository.TaskRepository;
 import com.teamflow.repository.UserRepository;
@@ -29,7 +30,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final TaskMapper taskMapper;
 
     @Transactional(readOnly = true)
     public PageResponse<TaskDto> getTasksByProject(UUID projectId, TaskStatus status,
@@ -38,7 +39,7 @@ public class TaskService {
         checkProjectAccess(projectId, requesterId);
         String normalizedTitle = (title == null || title.isBlank()) ? null : title.trim();
         return PageResponse.from(
-            taskRepository.search(projectId, status, assigneeId, normalizedTitle, pageable).map(this::toDto)
+            taskRepository.search(projectId, status, assigneeId, normalizedTitle, pageable).map(taskMapper::toDto)
         );
     }
 
@@ -46,7 +47,7 @@ public class TaskService {
     public TaskDto getTaskById(UUID id, UUID requesterId) {
         Task task = findOrThrow(id);
         checkProjectAccess(task.getProject().getId(), requesterId);
-        return toDto(task);
+        return taskMapper.toDto(task);
     }
 
     @Transactional
@@ -69,7 +70,7 @@ public class TaskService {
             .reporter(principal.getUser())
             .dueDate(request.getDueDate())
             .build();
-        return toDto(taskRepository.save(task));
+        return taskMapper.toDto(taskRepository.save(task));
     }
 
     @Transactional
@@ -87,7 +88,7 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", request.getAssigneeId()));
             task.setAssignee(assignee);
         }
-        return toDto(taskRepository.save(task));
+        return taskMapper.toDto(taskRepository.save(task));
     }
 
     @Transactional
@@ -99,23 +100,6 @@ public class TaskService {
             throw new AccessDeniedException("Only the reporter or project owner can delete this task");
         }
         taskRepository.delete(task);
-    }
-
-    public TaskDto toDto(Task task) {
-        return TaskDto.builder()
-            .id(task.getId())
-            .title(task.getTitle())
-            .description(task.getDescription())
-            .status(task.getStatus())
-            .priority(task.getPriority())
-            .projectId(task.getProject().getId())
-            .projectName(task.getProject().getName())
-            .assignee(task.getAssignee() != null ? userService.toDto(task.getAssignee()) : null)
-            .reporter(userService.toDto(task.getReporter()))
-            .dueDate(task.getDueDate())
-            .createdAt(task.getCreatedAt())
-            .updatedAt(task.getUpdatedAt())
-            .build();
     }
 
     private Task findOrThrow(UUID id) {

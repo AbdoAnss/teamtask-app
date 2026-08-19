@@ -4,6 +4,8 @@ import com.teamflow.domain.RefreshToken;
 import com.teamflow.domain.User;
 import com.teamflow.dto.auth.LoginRequest;
 import com.teamflow.dto.auth.RegisterRequest;
+import com.teamflow.exception.ConflictException;
+import com.teamflow.exception.ResourceNotFoundException;
 import com.teamflow.repository.RefreshTokenRepository;
 import com.teamflow.repository.UserRepository;
 import com.teamflow.security.JwtTokenProvider;
@@ -15,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -95,6 +98,89 @@ class AuthServiceTest {
 
         assertEquals("jwt", response.getAccessToken());
         assertEquals("bob", response.getUser().getUsername());
+    }
+
+    @Test
+    void registerShouldFailOnDuplicateUsername() {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("alice");
+        request.setEmail("alice2@teamflow.test");
+        request.setPassword("password123");
+
+        when(userRepository.existsByUsername("alice")).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void registerShouldFailOnDuplicateEmail() {
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("alice2");
+        request.setEmail("alice@teamflow.test");
+        request.setPassword("password123");
+
+        when(userRepository.existsByUsername("alice2")).thenReturn(false);
+        when(userRepository.existsByEmail("alice@teamflow.test")).thenReturn(true);
+
+        assertThrows(ConflictException.class, () -> authService.register(request));
+    }
+
+    @Test
+    void loginShouldFailWithBadCredentials() {
+        LoginRequest request = new LoginRequest();
+        request.setUsername("bob");
+        request.setPassword("wrong");
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+            .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        assertThrows(BadCredentialsException.class, () -> authService.login(request));
+    }
+
+    @Test
+    void refreshShouldRejectExpiredTokenAndDeleteIt() {
+        RefreshToken expired = RefreshToken.builder()
+            .token("expired-token")
+            .user(User.builder().id(UUID.randomUUID()).username("eve").email("eve@test").build())
+            .expiresAt(Instant.now().minusSeconds(60))
+            .build();
+
+        when(refreshTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(expired));
+
+        var req = new com.teamflow.dto.auth.RefreshTokenRequest();
+        req.setRefreshToken("expired-token");
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.refreshToken(req));
+        verify(refreshTokenRepository).delete(expired);
+    }
+
+    @Test
+    void refreshShouldFailWhenTokenUnknown() {
+        when(refreshTokenRepository.findByToken("missing")).thenReturn(Optional.empty());
+
+        var req = new com.teamflow.dto.auth.RefreshTokenRequest();
+        req.setRefreshToken("missing");
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.refreshToken(req));
+    }
+
+    @Test
+    void logoutShouldDeleteRefreshTokensForUser() {
+        User user = User.builder().id(UUID.randomUUID()).username("bob").email("bob@test").build();
+        when(userRepository.findByUsername("bob")).thenReturn(Optional.of(user));
+
+        authService.logout("bob");
+
+        verify(refreshTokenRepository).deleteByUserId(user.getId());
+    }
+
+    @Test
+    void logoutShouldIgnoreUnknownUser() {
+        when(userRepository.findByUsername("nobody")).thenReturn(Optional.empty());
+
+        authService.logout("nobody");
+
+        verify(refreshTokenRepository, never()).deleteByUserId(any(UUID.class));
     }
 
     @Test

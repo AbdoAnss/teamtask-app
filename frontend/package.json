@@ -2,11 +2,11 @@
   "name": "frontend",
   "version": "0.0.0",
   "scripts": {
-    "ng": "set NODE_OPTIONS=&& ng",
-    "start": "set NODE_OPTIONS=&& ng serve",
-    "build": "set NODE_OPTIONS=&& ng build",
-    "watch": "set NODE_OPTIONS=&& ng build --watch --configuration development",
-    "test": "set NODE_OPTIONS=&& ng test",
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
     "generate:client": "npx @openapitools/openapi-generator-cli generate -i ../docs/openapi.yaml -g typescript-angular -o src/app/api-client --additional-properties=npmName=teamflow-api,providedInRoot=true,ngVersion=17.0.0"
   },
