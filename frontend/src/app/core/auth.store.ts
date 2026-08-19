@@ -18,6 +18,12 @@ export class AuthStore {
   readonly isAdmin = computed(() => this.userState()?.role === 'ADMIN');
 
   setSession(auth: AuthResponse): void {
+    if (!auth?.accessToken || !auth?.refreshToken || !auth?.user) {
+      // A malformed auth payload would otherwise be stringified into
+      // localStorage ("undefined") and poison every later session check.
+      this.clearSession();
+      return;
+    }
     localStorage.setItem(ACCESS_TOKEN_KEY, auth.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, auth.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(auth.user));

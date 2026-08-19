@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { PageResponse, TaskDto, TaskPriority, TaskStatus } from './models';
 import { TasksService as TasksApi } from '../api-client/api/tasks.service';
+import { JSON_ACCEPT } from './api-accept';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -22,7 +23,10 @@ export class TaskService {
         filter.title?.trim() || undefined,
         filter.page ?? 0,
         filter.size ?? 10,
-        ['updatedAt,desc']
+        ['updatedAt,desc'],
+        'body',
+        false,
+        JSON_ACCEPT
       )
       .pipe(map((result) => result as unknown as PageResponse<TaskDto>));
   }
@@ -34,7 +38,8 @@ export class TaskService {
     assigneeId?: string;
     dueDate?: string;
   }): Observable<TaskDto> {
-    return this.tasksApi.createTask(projectId, payload).pipe(map((result) => result as unknown as TaskDto));
+    return this.tasksApi.createTask(projectId, payload, 'body', false, JSON_ACCEPT)
+      .pipe(map((result) => result as unknown as TaskDto));
   }
 
   updateTask(taskId: string, payload: Partial<{
@@ -45,6 +50,7 @@ export class TaskService {
     assigneeId: string;
     dueDate: string;
   }>): Observable<TaskDto> {
-    return this.tasksApi.updateTask(taskId, payload).pipe(map((result) => result as unknown as TaskDto));
+    return this.tasksApi.updateTask(taskId, payload, 'body', false, JSON_ACCEPT)
+      .pipe(map((result) => result as unknown as TaskDto));
   }
 }

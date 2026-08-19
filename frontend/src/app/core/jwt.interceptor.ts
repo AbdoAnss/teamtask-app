@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, finalize, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { AuthStore } from './auth.store';
 
@@ -39,6 +39,9 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
         catchError((refreshErr) => {
           authStore.clearSession();
           return throwError(() => refreshErr);
+        }),
+        finalize(() => {
+          isRefreshing = false;
         })
       );
     })
