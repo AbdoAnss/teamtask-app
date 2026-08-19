@@ -5,12 +5,12 @@ on:
     branches: ["master", "main"]
     paths:
       - "backend/**"
-      - ".github/workflows/backend-maven-ci.yml"
+      - ".github/workflows/maven.yml"
   pull_request:
     branches: ["master", "main"]
     paths:
       - "backend/**"
-      - ".github/workflows/backend-maven-ci.yml"
+      - ".github/workflows/maven.yml"
 
 concurrency:
   group: backend-ci-${{ github.ref }}

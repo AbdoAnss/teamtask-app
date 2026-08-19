@@ -8,6 +8,7 @@ import com.teamflow.dto.project.ProjectDto;
 import com.teamflow.dto.project.UpdateProjectRequest;
 import com.teamflow.exception.AccessDeniedException;
 import com.teamflow.exception.ResourceNotFoundException;
+import com.teamflow.mapper.ProjectMapper;
 import com.teamflow.repository.ProjectRepository;
 import com.teamflow.repository.UserRepository;
 import com.teamflow.security.UserPrincipal;
@@ -18,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +26,13 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final ProjectMapper projectMapper;
 
     @Transactional(readOnly = true)
     public PageResponse<ProjectDto> getMyProjects(UUID userId, String name, Pageable pageable) {
         String normalizedName = (name == null || name.isBlank()) ? null : name.trim();
         return PageResponse.from(
-            projectRepository.searchByMemberAndName(userId, normalizedName, pageable).map(this::toDto)
+            projectRepository.searchByMemberAndName(userId, normalizedName, pageable).map(projectMapper::toDto)
         );
     }
 
@@ -40,7 +40,7 @@ public class ProjectService {
     public ProjectDto getProjectById(UUID id, UUID requesterId) {
         Project project = findOrThrow(id);
         checkAccess(project, requesterId);
-        return toDto(project);
+        return projectMapper.toDto(project);
     }
 
     @Transactional
@@ -52,7 +52,7 @@ public class ProjectService {
             .owner(owner)
             .build();
         project.getMembers().add(owner);
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDto(projectRepository.save(project));
     }
 
     @Transactional
@@ -62,7 +62,7 @@ public class ProjectService {
         if (StringUtils.hasText(request.getName()))        project.setName(request.getName());
         if (StringUtils.hasText(request.getDescription())) project.setDescription(request.getDescription());
         if (request.getStatus() != null)                   project.setStatus(request.getStatus());
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDto(projectRepository.save(project));
     }
 
     @Transactional
@@ -79,7 +79,7 @@ public class ProjectService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User", userId));
         project.getMembers().add(user);
-        return toDto(projectRepository.save(project));
+        return projectMapper.toDto(projectRepository.save(project));
     }
 
     @Transactional
@@ -87,21 +87,7 @@ public class ProjectService {
         Project project = findOrThrow(projectId);
         checkOwner(project, principal.getUser().getId());
         project.getMembers().removeIf(m -> m.getId().equals(userId));
-        return toDto(projectRepository.save(project));
-    }
-
-    public ProjectDto toDto(Project project) {
-        return ProjectDto.builder()
-            .id(project.getId())
-            .name(project.getName())
-            .description(project.getDescription())
-            .status(project.getStatus())
-            .owner(userService.toDto(project.getOwner()))
-            .members(project.getMembers().stream().map(userService::toDto).collect(Collectors.toSet()))
-            .taskCount(project.getTasks().size())
-            .createdAt(project.getCreatedAt())
-            .updatedAt(project.getUpdatedAt())
-            .build();
+        return projectMapper.toDto(projectRepository.save(project));
     }
 
     private Project findOrThrow(UUID id) {

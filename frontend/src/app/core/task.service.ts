@@ -1,12 +1,11 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { API_BASE_URL } from './api.config';
+import { map, Observable } from 'rxjs';
 import { PageResponse, TaskDto, TaskPriority, TaskStatus } from './models';
+import { TasksService as TasksApi } from '../api-client/api/tasks.service';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly tasksApi: TasksApi) {}
 
   getTasks(projectId: string, filter: {
     page?: number;
@@ -15,16 +14,17 @@ export class TaskService {
     assigneeId?: string;
     title?: string;
   }): Observable<PageResponse<TaskDto>> {
-    let params = new HttpParams()
-      .set('page', filter.page ?? 0)
-      .set('size', filter.size ?? 10)
-      .set('sort', 'updatedAt,desc');
-
-    if (filter.status) params = params.set('status', filter.status);
-    if (filter.assigneeId) params = params.set('assigneeId', filter.assigneeId);
-    if (filter.title) params = params.set('title', filter.title);
-
-    return this.http.get<PageResponse<TaskDto>>(`${API_BASE_URL}/projects/${projectId}/tasks`, { params });
+    return this.tasksApi
+      .getTasksByProject(
+        projectId,
+        filter.status || undefined,
+        filter.assigneeId || undefined,
+        filter.title?.trim() || undefined,
+        filter.page ?? 0,
+        filter.size ?? 10,
+        ['updatedAt,desc']
+      )
+      .pipe(map((result) => result as unknown as PageResponse<TaskDto>));
   }
 
   createTask(projectId: string, payload: {
@@ -34,7 +34,7 @@ export class TaskService {
     assigneeId?: string;
     dueDate?: string;
   }): Observable<TaskDto> {
-    return this.http.post<TaskDto>(`${API_BASE_URL}/projects/${projectId}/tasks`, payload);
+    return this.tasksApi.createTask(projectId, payload).pipe(map((result) => result as unknown as TaskDto));
   }
 
   updateTask(taskId: string, payload: Partial<{
@@ -45,6 +45,6 @@ export class TaskService {
     assigneeId: string;
     dueDate: string;
   }>): Observable<TaskDto> {
-    return this.http.put<TaskDto>(`${API_BASE_URL}/tasks/${taskId}`, payload);
+    return this.tasksApi.updateTask(taskId, payload).pipe(map((result) => result as unknown as TaskDto));
   }
 }

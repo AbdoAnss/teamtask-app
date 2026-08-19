@@ -1,8 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { API_BASE_URL } from '../core/api.config';
-import { PageResponse, UserDto } from '../core/models';
+import { UserDto } from '../core/models';
+import { UserService } from '../core/user.service';
 
 @Component({
   selector: 'app-users-page',
@@ -14,13 +13,12 @@ import { PageResponse, UserDto } from '../core/models';
 export class UsersPage {
   readonly users = signal<UserDto[]>([]);
 
-  constructor(private readonly http: HttpClient) {
+  constructor(private readonly userService: UserService) {
     this.load();
   }
 
   load(): void {
-    const params = new HttpParams().set('page', 0).set('size', 50).set('sort', 'username,asc');
-    this.http.get<PageResponse<UserDto>>(`${API_BASE_URL}/users`, { params }).subscribe((response) => {
+    this.userService.getUsers(0, 50).subscribe((response) => {
       this.users.set(response.content);
     });
   }
